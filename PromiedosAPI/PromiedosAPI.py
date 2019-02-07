@@ -3,13 +3,9 @@
 from bs4 import BeautifulSoup
 import re
 import urllib.request
-
-
 		
 #class Match:
 #	def __init__(self, inited=False, hour, id):
-
-
 
 class PromiedosAPI:
 	URL = "http://www.promiedos.com.ar/"
