@@ -53,13 +53,23 @@ class PromiedosAPI:
 
 		s = self._get_HTML_league(league, lround)
 
-		prueba = []
+		equipos = []
+		fechas = []
+		horarios = []
 
 		for e in s.find_all(class_='datoequipo'):
-			prueba.append(e.get_text())
+			equipos.append(e.get_text())
 
-		return prueba
+		for e in s.find_all(class_="horariopartido"):
+			fechas.append((e.get_text()).strip())
 
+		for e in s.find_all(class_="falta"):
+			horarios.append((e.get_text()).strip())
+
+
+
+		return equipos + fechas + horarios
+		
 	def get_scores(self, league, lround):
 		#print(league)
 
@@ -74,13 +84,38 @@ class PromiedosAPI:
 
 		return prueba
 
-	def get_standings(self, league, team=False):
+	def get_standings(self, league, team=False, json=False):
 		s = self._get_HTML_league(league)
 
 		s = s.find(class_='tablesorter3')
 		#str(s)
 
 		s = re.findall(re.compile(r'<strong>[A-Za-z()_.\- ]+<\/strong><\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>[-+]?\d+'), str(s))
+
+		if json == True:
+			#{team1: }
+			s = [((x.replace("</td><td>", "---")).replace("<strong>", "")).replace("</strong>", "") for x in s]
+			json = {}
+			pos = 1
+			for te in s:
+				t = te.split("---")
+				json[t[0]] = {
+					"points": int(t[1]),
+					"played": int(t[2]),
+					"wins": int(t[3]),
+					"draws":int(t[4]),
+					"losses":int(t[5]),
+					"GF": int(t[6]),
+					"GA": int(t[7]),
+					"GD": int(t[8]),
+					"pos": pos
+				}
+				pos += 1
+
+			if team != False:
+				return json[team]
+
+			return json
 
 		s = [((x.replace("</td><td>", " ")).replace("<strong>", "")).replace("</strong>", "") for x in s]
 
