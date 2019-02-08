@@ -3,9 +3,6 @@
 from bs4 import BeautifulSoup
 import re
 import urllib.request
-		
-#class Match:
-#	def __init__(self, inited=False, hour, id):
 
 class PromiedosAPI:
 	URL = "http://www.promiedos.com.ar/"
@@ -66,7 +63,7 @@ class PromiedosAPI:
 		for e in s.find_all(class_="falta"):
 			horarios.append((e.get_text()).strip())
 
-
+		# played si/no, id if played, ordenar fecha/hora
 
 		return equipos + fechas + horarios
 		
@@ -123,3 +120,41 @@ class PromiedosAPI:
 
 		#regex pos
 		#<strong>[A-Za-z()_.\- ]+<\/strong><\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>[-+]?\d+
+
+	def get_stats(self, id):
+		promiLink = self.URL + "ficha.php?id=" + id
+		try:
+			r = urllib.request.urlopen(promiLink)
+			s = BeautifulSoup(r, 'html.parser')
+
+			s = str(s)
+			
+			s = s.replace(" (total de intentos)", "")
+
+			newArr = re.findall(r'>\d\d?%?<|>Posesion:<|>Tiros efectivos al arco:<|Fouls Cometidos:|Tiros al arco:|Corners:', s)
+			
+			tiempo = re.findall(r'se">\d\d?|se">Entretiempo|iz">Finalizado', s)
+			
+			ind = newArr.index(">Posesion:<")
+			newArr = newArr[ind:]
+			
+			newArr = [(x.replace("<", "")).replace(">", "") for x in newArr]
+
+			for i in range(len(newArr)):
+				if("%" in newArr[i]):
+					newArr[i] = newArr[i].replace("%", "")
+
+			dic = {}
+			a = 0
+			dats = ["PL", "PV", "TAL", "TAV", "TL" , "TV", "FL", "FV", "CL", "CV"]
+			for i in range(1, len(newArr), 3):
+				dic[dats[a]] = newArr[i]
+				dic[dats[a+1]] = newArr[i+1]
+				a += 2
+
+			return dic
+		except Exception as e:
+			dic = {}
+			print(e)
+			print("Probably you put an invalid id")
+			return dic
