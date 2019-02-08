@@ -13,13 +13,13 @@ class PromiedosAPI:
 	def __init__(self):
 		print("API Inited")
 
-	def _get_HTML_league(self, league, lround):
+	def _get_HTML_league(self, league, lround=0):
 		extLeagues = {"espana": 10, 
 		"italia": 11, "inglaterra": 12,
 		"alemania": 25, "brasil":26, 
 		"francia": 27}
 
-		localLeagues = {"superliga": "", 
+		localLeagues = {"primera": "", 
 		"bnacional": "b", "bmetro": "bm",
 		"federala": "fa", "primerac": "c",
 		"primerad": "d"}
@@ -31,13 +31,18 @@ class PromiedosAPI:
 		#26 brasil
 		#27 francia
 
-		if(league in extLeagues.keys()):
-			r = urllib.request.urlopen(self.URL + "fechaex.php?fecha=" + str(lround) + "_&liga=" + str(extLeagues[league]))
-		elif(league in localLeagues.keys()):
-			r = urllib.request.urlopen(self.URL + "fecha" + localLeagues[league] +".php?fecha=" + str(lround))
+		if(lround != 0):
+			if(league in extLeagues.keys()):
+				r = urllib.request.urlopen(self.URL + "fechaex.php?fecha=" + str(lround) + "_&liga=" + str(extLeagues[league]))
+			elif(league in localLeagues.keys()):
+				r = urllib.request.urlopen(self.URL + "fecha" + localLeagues[league] +".php?fecha=" + str(lround))
+			else:
+				print("League not found")
+				return []
 		else:
-			print("League not found")
-			return []
+			r = urllib.request.urlopen(self.URL + league)
+			
+			
 
 		s = BeautifulSoup(r, 'html.parser')
 
@@ -69,5 +74,17 @@ class PromiedosAPI:
 
 		return prueba
 
-	def prueba(self):
-		pass
+	def get_standings(self, league, team=False):
+		s = self._get_HTML_league(league)
+
+		s = s.find(class_='tablesorter3')
+		#str(s)
+
+		s = re.findall(re.compile(r'<strong>[A-Za-z()_.\- ]+<\/strong><\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>[-+]?\d+'), str(s))
+
+		s = [((x.replace("</td><td>", " ")).replace("<strong>", "")).replace("</strong>", "") for x in s]
+
+		return s
+
+		#regex pos
+		#<strong>[A-Za-z()_.\- ]+<\/strong><\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>[-+]?\d+
