@@ -45,7 +45,7 @@ class PromiedosAPI:
 
 		return s
 
-	def get_matches(self, league, lround):
+	def get_matches(self, league, lround, json=False):
 		#print(league)
 
 		s = self._get_HTML_league(league, lround)
@@ -60,13 +60,33 @@ class PromiedosAPI:
 		for e in s.find_all(class_="horariopartido"):
 			fechas.append((e.get_text()).strip())
 
+		for e in s.find_all(class_="finaliza"):
+			horarios.append((e.get_text()).strip())
+
 		for e in s.find_all(class_="falta"):
 			horarios.append((e.get_text()).strip())
 
 		# played si/no, id if played, ordenar fecha/hora
 
+		if json:
+			_json = {}
+			m = 0 # match number
+			for i in range(0, len(equipos), 2):
+				_json["match" + str(m+1)] = {
+					"homeTeam": equipos[i],
+					"awayTeam": equipos[i+1],
+					"playing": False,
+					"id": "xxxxxx",
+					"hour": horarios[m],
+					"date": 0
+				}
+				m += 1
+
+			return _json
+
+
 		return equipos + fechas + horarios
-		
+		#return s
 	def get_scores(self, league, lround):
 		#print(league)
 
@@ -92,11 +112,11 @@ class PromiedosAPI:
 		if json == True:
 			#{team1: }
 			s = [((x.replace("</td><td>", "---")).replace("<strong>", "")).replace("</strong>", "") for x in s]
-			json = {}
+			_json_ = {}
 			pos = 1
 			for te in s:
 				t = te.split("---")
-				json[t[0]] = {
+				_json[t[0]] = {
 					"points": int(t[1]),
 					"played": int(t[2]),
 					"wins": int(t[3]),
@@ -110,9 +130,9 @@ class PromiedosAPI:
 				pos += 1
 
 			if team != False:
-				return json[team]
+				return _json[team]
 
-			return json
+			return _json
 
 		s = [((x.replace("</td><td>", " ")).replace("<strong>", "")).replace("</strong>", "") for x in s]
 
@@ -121,8 +141,8 @@ class PromiedosAPI:
 		#regex pos
 		#<strong>[A-Za-z()_.\- ]+<\/strong><\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>[-+]?\d+
 
-	def get_stats(self, id):
-		promiLink = self.URL + "ficha.php?id=" + id
+	def get_stats(self, id_):
+		promiLink = self.URL + "ficha.php?id=" + id_
 		try:
 			r = urllib.request.urlopen(promiLink)
 			s = BeautifulSoup(r, 'html.parser')
@@ -158,3 +178,24 @@ class PromiedosAPI:
 			print(e)
 			print("Probably you put an invalid id")
 			return dic
+
+
+	def _get_secret_id(self, id_):
+		promiLink = "http://www.promiedos.com.ar/ficha.php?id=" + id_
+		r = urllib.request.urlopen(promiLink)
+		s = BeautifulSoup(r, 'html.parser')
+		
+		s = str(s)
+		secretid = ((re.search(r's1=\"[A-Za-z]+\"', s).group()).replace('s1=\"', "")).replace('"', "")
+		
+		return secretid
+
+	def get_live_score(self, secretid):
+		#promiLink = "http://www.promiedos.com.ar/scores.jsonid"
+		#r = urllib.request.urlopen(promiLink)
+		
+		#s = BeautifulSoup(r, 'html.parser')
+		#return s
+		pass
+
+#http://www.promiedos.com.ar/scores.jsonid
