@@ -179,23 +179,40 @@ class PromiedosAPI:
 			print("Probably you put an invalid id")
 			return dic
 
-
-	def _get_secret_id(self, id_):
-		promiLink = "http://www.promiedos.com.ar/ficha.php?id=" + id_
-		r = urllib.request.urlopen(promiLink)
+	def _get_html(self, extra, strin=False): #this function has to replace _get_html_league
+		p = self.URL + extra
+		r = urllib.request.urlopen(p)
 		s = BeautifulSoup(r, 'html.parser')
 		
-		s = str(s)
+		if strin:
+			return str(s)
+
+		return s
+
+	def _get_secret_id(self, id_):
+		s = self._get_html("ficha.php?id=" + id_, True)
 		secretid = ((re.search(r's1=\"[A-Za-z]+\"', s).group()).replace('s1=\"', "")).replace('"', "")
 		
 		return secretid
 
-	def get_live_score(self, secretid):
-		#promiLink = "http://www.promiedos.com.ar/scores.jsonid"
-		#r = urllib.request.urlopen(promiLink)
+	def get_live_score(self, secretid, json=False):
 		
-		#s = BeautifulSoup(r, 'html.parser')
-		#return s
-		pass
+		link = self.URL + "fichas/" + secretid + ".htm"
+		r = urllib.request.Request(link, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0", "X-Requested-With": "XMLHttpRequest"})
+		p = urllib.request.urlopen(r)
+		s = BeautifulSoup(p, 'html.parser')
+
+		time = s.find(class_='jugandose').get_text()
+		teams = [x.get_text() for x in s.find_all(class_='nomequipo')]
+		home = s.find("div", {"id": "ficha-resultado1"}).get_text()
+		away = s.find("div", {"id": "ficha-resultado2"}).get_text()
+
+		if json:
+			return {"time": time, "homeTeam": teams[0], 
+			"homeGoals": home, "awayTeam": teams[1], "awayGoals": away}
+
+		return [time, teams[0], home, teams[1], away] 
+		
+
 
 #http://www.promiedos.com.ar/scores.jsonid
