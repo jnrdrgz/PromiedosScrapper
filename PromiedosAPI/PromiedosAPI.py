@@ -3,6 +3,7 @@
 from bs4 import BeautifulSoup
 import re
 import urllib.request
+import itertools
 
 class PromiedosAPI:
 	URL = "http://www.promiedos.com.ar/"
@@ -92,14 +93,25 @@ class PromiedosAPI:
 
 		s = self._get_HTML_league(league, lround)
 
-		prueba = []
+		#print(s)
+
+		quips = [] #teams list
+		scores = [] #scores list
+		ids = []
+
 
 		for e in s.find_all(class_='datoequipo'):
-			prueba.append(e.get_text())
-		for e in s.find_all("span", {"id": re.compile("r\d_\d_\d\d\d")}):
-			prueba.append(e.get_text())
+			quips.append(e.get_text())
+		for e in s.find_all("span", {"id": re.compile("r\d\d?\d?_\d\d?\d?_\d\d?\d?")}):
+			ids.append(e.get_text())
+			#need to be fixed because not all ids follow this regex it has to be
+			#dd?d?_dd?d?_dd?d? sintax needs to be fixed
 
-		return prueba
+		for e in s.find_all(class_='resu'):
+			scores.append(e.get_text())
+
+		teamsandscore = list(itertools.chain.from_iterable(zip(quips, scores)))
+		return teamsandscore
 
 	def get_standings(self, league, team=False, json=False):
 		s = self._get_HTML_league(league)
