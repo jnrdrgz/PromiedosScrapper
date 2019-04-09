@@ -15,7 +15,7 @@ class PromiedosAPI:
 		extLeagues = {"espana": 10, 
 		"italia": 11, "inglaterra": 12,
 		"alemania": 25, "brasil":26, 
-		"francia": 27}
+		"francia": 27, "mexico": 87, "mls": 88}
 
 		localLeagues = {"primera": "", 
 		"bnacional": "b", "bmetro": "bm",
@@ -31,7 +31,7 @@ class PromiedosAPI:
 
 		if(lround != 0):
 			if(league in extLeagues.keys()):
-				r = urllib.request.urlopen(self.URL + "fechaex.php?fecha=" + str(lround) + "_&liga=" + str(extLeagues[league]))
+				r = urllib.request.urlopen(self.URL + "fechaex.php?fecha=" + str(lround) + "_&liga=" + str(extLeagues[league]) + ".php")
 			elif(league in localLeagues.keys()):
 				r = urllib.request.urlopen(self.URL + "fecha" + localLeagues[league] +".php?fecha=" + str(lround))
 			else:
@@ -40,8 +40,6 @@ class PromiedosAPI:
 		else:
 			r = urllib.request.urlopen(self.URL + league)
 			
-			
-
 		s = BeautifulSoup(r, 'html.parser')
 
 		return s
@@ -88,7 +86,7 @@ class PromiedosAPI:
 
 		return equipos + fechas + horarios
 		#return s
-	def get_scores(self, league, lround):
+	def get_scores(self, league, lround=0):
 		#print(league)
 
 		s = self._get_HTML_league(league, lround)
@@ -99,19 +97,20 @@ class PromiedosAPI:
 		scores = [] #scores list
 		ids = []
 
+		if s != []:
+			for e in s.find_all(class_='datoequipo'):
+				quips.append(e.get_text())
+			for e in s.find_all("span", {"id": re.compile("r\d\d?\d?_\d\d?\d?_\d\d?\d?")}):
+				ids.append(e.get_text())
+				#need to be fixed because not all ids follow this regex it has to be
+				#dd?d?_dd?d?_dd?d? sintax needs to be fixed
 
-		for e in s.find_all(class_='datoequipo'):
-			quips.append(e.get_text())
-		for e in s.find_all("span", {"id": re.compile("r\d\d?\d?_\d\d?\d?_\d\d?\d?")}):
-			ids.append(e.get_text())
-			#need to be fixed because not all ids follow this regex it has to be
-			#dd?d?_dd?d?_dd?d? sintax needs to be fixed
+			for e in s.find_all(class_='resu'):
+				scores.append(e.get_text())
 
-		for e in s.find_all(class_='resu'):
-			scores.append(e.get_text())
-
-		teamsandscore = list(itertools.chain.from_iterable(zip(quips, scores)))
-		return teamsandscore
+			if scores[0] != '':
+				return list(itertools.chain.from_iterable(zip(quips, scores)))
+			return quips
 
 	def get_standings(self, league, team=False, json=False):
 		s = self._get_HTML_league(league)
@@ -223,9 +222,33 @@ class PromiedosAPI:
 			return {"time": time, "homeTeam": teams[0], 
 			"homeGoals": home, "awayTeam": teams[1], "awayGoals": away}
 
-		return [time, teams[0], home, teams[1], away] 
+		return [time, teams[0], home, teams[1], away]
+
+	def today(self, today=1):
+		r = urllib.request.urlopen(self.URL)
+		s = BeautifulSoup(r, 'html.parser')
+
+		#print(s)
 		
+		#for e in s.find_all(True, {'class':['datoequipo', 'verdegrande']}:
+		#	print(e.get_text())
 
+		tod = []
+		nex = []
+		flag = 0
+		for x in s.findAll(True, {'class':['datoequipo', 'falta', 'verdegrande', 'resu']}):
+			if x.get_text() == 'PROXIMOS PARTIDOS':
+				flag = 1
+			
+			if not flag:
+				tod.append(x.get_text())
+			else:
+				nex.append(x.get_text())
 
+		if today == 1:
+			return tod[1:]
+		else:
+			return nex
+		
 #http://www.promiedos.com.ar/scores.jsonid
 #a
