@@ -20,7 +20,7 @@ class PromiedosAPI:
 		localLeagues = {"primera": "", 
 		"bnacional": "b", "bmetro": "bm",
 		"federala": "fa", "primerac": "c",
-		"primerad": "d"}
+		"primerad": "d"} #argentina divisions
 
 		#10 españa
 		#11 italia
@@ -44,12 +44,22 @@ class PromiedosAPI:
 
 		return s
 
+	def _get_html(self, extra, strin=False): #this function has to replace _get_html_league
+		p = self.URL + extra
+		r = urllib.request.urlopen(p)
+		s = BeautifulSoup(r, 'html.parser')
+		
+		if strin:
+			return str(s)
+
+		return s
+
 	def get_matches(self, league, lround, json=False):
 		#print(league)
 
 		s = self._get_HTML_league(league, lround)
 
-		equipos = []
+		'''equipos = []
 		fechas = []
 		horarios = []
 
@@ -63,28 +73,22 @@ class PromiedosAPI:
 			horarios.append((e.get_text()).strip())
 
 		for e in s.find_all(class_="falta"):
-			horarios.append((e.get_text()).strip())
+			horarios.append((e.get_text()).strip())'''
+
+		todo = []
+
+		for x in s.findAll(True, {'class':['datoequipo', 'falta', 'finaliza', 'horariopartido']}):
+			todo.append(x.get_text())
 
 		# played si/no, id if played, ordenar fecha/hora
 
 		if json:
 			_json = {}
-			m = 0 # match number
-			for i in range(0, len(equipos), 2):
-				_json["match" + str(m+1)] = {
-					"homeTeam": equipos[i],
-					"awayTeam": equipos[i+1],
-					"playing": False,
-					"id": "xxxxxx",
-					"hour": horarios[m],
-					"date": 0
-				}
-				m += 1
-
+			
 			return _json
 
-
-		return equipos + fechas + horarios
+		return todo
+		#return equipos + fechas + horarios
 		#return s
 	def get_scores(self, league, lround=0):
 		#print(league)
@@ -152,7 +156,7 @@ class PromiedosAPI:
 		#regex pos
 		#<strong>[A-Za-z()_.\- ]+<\/strong><\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>[-+]?\d+
 
-	def get_stats(self, id_):
+	'''def get_stats(self, id_):
 		promiLink = self.URL + "ficha.php?id=" + id_
 		try:
 			r = urllib.request.urlopen(promiLink)
@@ -188,17 +192,21 @@ class PromiedosAPI:
 			dic = {}
 			print(e)
 			print("Probably you put an invalid id")
-			return dic
+			return dic'''
 
-	def _get_html(self, extra, strin=False): #this function has to replace _get_html_league
-		p = self.URL + extra
-		r = urllib.request.urlopen(p)
-		s = BeautifulSoup(r, 'html.parser')
-		
-		if strin:
-			return str(s)
+	def get_stats(self, id_):
+		ext = "ficha.php?id=" + id_
 
-		return s
+		s = self._get_html(ext)
+
+
+		stats = []
+		tmp = []
+		for x in s.findAll(True, {'class':['incidencias2', 'amarillas', 'cambios']}):
+			
+			stats.append(x.get_text())
+
+		return stats
 
 	def _get_secret_id(self, id_):
 		s = self._get_html("ficha.php?id=" + id_, True)
@@ -224,10 +232,11 @@ class PromiedosAPI:
 
 		return [time, teams[0], home, teams[1], away]
 
+	#today == 1 -> today matches // today == 0 -> next matches(tomorrow and after) 
 	def today(self, today=1):
 		r = urllib.request.urlopen(self.URL)
 		s = BeautifulSoup(r, 'html.parser')
-
+		
 		#print(s)
 		
 		#for e in s.find_all(True, {'class':['datoequipo', 'verdegrande']}:
@@ -236,7 +245,10 @@ class PromiedosAPI:
 		tod = []
 		nex = []
 		flag = 0
-		for x in s.findAll(True, {'class':['datoequipo', 'falta', 'verdegrande', 'resu']}):
+
+		# here create a list of list so the matches from one league separate from others
+		# ex [[league1, p1, p2], [league2, p1, p2]]
+		for x in s.findAll(True, {'class':['datoequipo', 'falta', 'verdegrande', 'resu', 'tituloin']}):
 			if x.get_text() == 'PROXIMOS PARTIDOS':
 				flag = 1
 			
@@ -249,6 +261,7 @@ class PromiedosAPI:
 			return tod[1:]
 		else:
 			return nex
-		
+	
+
 #http://www.promiedos.com.ar/scores.jsonid
 #a
