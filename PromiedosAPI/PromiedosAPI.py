@@ -5,6 +5,8 @@ import re
 import urllib.request
 import itertools
 
+# class Partido -> to do: make a class partido
+
 class PromiedosAPI:
 	URL = "http://www.promiedos.com.ar/"
 
@@ -200,13 +202,33 @@ class PromiedosAPI:
 		s = self._get_html(ext)
 
 
-		stats = []
+		statsHT = [] #home	
+		statsAT = [] #away
+		flag = 0
 		tmp = []
-		for x in s.findAll(True, {'class':['incidencias2', 'amarillas', 'cambios']}):
-			
-			stats.append(x.get_text())
+		for x in s.findAll(True, {'class':['nomequipo', 'incidencias1', 'incidencias2', 'amarillas', 'cambios']}):	
+			if x.get("class") == ['nomequipo']:
+				if flag == 0:
+					flag = 1
+				else:
+					flag = 0
 
-		return stats
+			if flag == 0:
+				statsAT.append(x.get_text())
+			else: 
+				statsHT.append(x.get_text())
+		finl = []
+		finl.append(statsHT)
+		finl.append(statsAT)
+
+		for x in s.findAll(True, {'id':['porcentaje1']}):
+			print(x.get_text())
+		
+		for x in s.findAll(True, {'id':['porcentaje2']}):
+			print(x.get_text())
+
+
+		return finl
 
 	def _get_secret_id(self, id_):
 		s = self._get_html("ficha.php?id=" + id_, True)
