@@ -7,6 +7,38 @@ import itertools
 
 # class Partido -> to do: make a class partido
 
+#classes
+class Match:
+	def __init__(self, _id="", time=0, date="", stadium="", referee="", home="", away=""):
+			self._id = _id
+			self.time = time
+			self.date = date
+			self.stadium = stadium
+			self.referee = referee
+			self.home = home 
+			self.away = away
+			
+class LiveTeam:
+	def __init__(self, name="", goals=0, stats="", players="", coach="", changes="", yellow_cards="", red_cards=""):
+		self.name = name
+		self.goals = goals
+		self.stats = stats
+		self.players = players
+		self.coach = coach
+		self.changes = changes
+		self.yellow_cards = yellow_cards 
+		self.red_cards = red_cards
+			
+
+class Stat:
+	def __init__(self, possession="", shots_attempts="", shots_ongoal="", fouls="", corners=""):
+		self.possession = possession
+		self.shots_attempts = shots_attempts
+		self.shots_ongoal = shots_ongoal
+		self.fouls = fouls
+		self.corners = corners
+
+
 class PromiedosAPI:
 	URL = "http://www.promiedos.com.ar/"
 
@@ -196,17 +228,56 @@ class PromiedosAPI:
 			print("Probably you put an invalid id")
 			return dic'''
 
-	def get_stats(self, id_):
+	def get_match(self, id_):
 		ext = "ficha.php?id=" + id_
 
 		s = self._get_html(ext)
-
 
 		statsHT = [] #home	
 		statsAT = [] #away
 		flag = 0
 		tmp = []
-		for x in s.findAll(True, {'class':['nomequipo', 'incidencias1', 'incidencias2', 'amarillas', 'cambios']}):	
+
+		match = Match()
+		hTeam = LiveTeam()
+		hStats = Stat()
+		aTeam = LiveTeam()
+		aStats = Stat()
+
+		match._id = id_
+
+		for x in s.findAll(True, {'id':['ficha-horario']}):
+			st = x.get_text()
+			if ":" in x:
+				lmt = s.index(":")+3
+				match.date = st[:lmt]
+				match.referee = match.stadium = st[lmt+1:]
+
+		for x in s.findAll(True, {'id':['ficha-tiempo']}):
+			match.time = x.get_text()
+
+		f = 0
+		for x in s.findAll(True, {'class':['nomequipo']}):
+			if x.get("class") == ['nomequipo']:
+				if f == 0:
+					hTeam.name = x.get_text()
+					f = 1
+				else:
+					aTeam.name = x.get_text()
+
+		#todo
+		for x in s.findAll(True, {'class':['incidencias2']}):
+			print("--oneclass--")
+			print(x.get("class"))
+			print(x.get_text())
+
+
+		match.home = hTeam
+		match.away = aTeam
+		return match
+
+
+		'''for x in s.findAll(True, {'class':['nomequipo', 'incidencias1', 'incidencias2', 'amarillas', 'cambios']}):	
 			if x.get("class") == ['nomequipo']:
 				if flag == 0:
 					flag = 1
@@ -228,7 +299,7 @@ class PromiedosAPI:
 			print(x.get_text())
 
 
-		return finl
+		return finl'''
 
 	def _get_secret_id(self, id_):
 		s = self._get_html("ficha.php?id=" + id_, True)
