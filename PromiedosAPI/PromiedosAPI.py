@@ -10,13 +10,13 @@ import itertools
 #classes
 class Match:
 	def __init__(self, _id="", time=0, date="", stadium="", referee="", home="", away=""):
-			self._id = _id
-			self.time = time
-			self.date = date
-			self.stadium = stadium
-			self.referee = referee
-			self.home = home 
-			self.away = away
+		self._id = _id
+		self.time = time
+		self.date = date
+		self.stadium = stadium
+		self.referee = referee
+		self.home = home 
+		self.away = away
 			
 class LiveTeam:
 	def __init__(self, name="", goals=0, scorers=[], stats="", players="", coach="", changes="", yellow_cards="", red_cards=""):
@@ -188,47 +188,6 @@ class PromiedosAPI:
 
 		return s
 
-		#regex pos
-		#<strong>[A-Za-z()_.\- ]+<\/strong><\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>\d+<\/td><td>[-+]?\d+
-
-	'''def get_stats(self, id_):
-		promiLink = self.URL + "ficha.php?id=" + id_
-		try:
-			r = urllib.request.urlopen(promiLink)
-			s = BeautifulSoup(r, 'html.parser')
-
-			s = str(s)
-			
-			s = s.replace(" (total de intentos)", "")
-
-			newArr = re.findall(r'>\d\d?%?<|>Posesion:<|>Tiros efectivos al arco:<|Fouls Cometidos:|Tiros al arco:|Corners:', s)
-			
-			tiempo = re.findall(r'se">\d\d?|se">Entretiempo|iz">Finalizado', s)
-			
-			ind = newArr.index(">Posesion:<")
-			newArr = newArr[ind:]
-			
-			newArr = [(x.replace("<", "")).replace(">", "") for x in newArr]
-
-			for i in range(len(newArr)):
-				if("%" in newArr[i]):
-					newArr[i] = newArr[i].replace("%", "")
-
-			dic = {}
-			a = 0
-			dats = ["PL", "PV", "TAL", "TAV", "TL" , "TV", "FL", "FV", "CL", "CV"]
-			for i in range(1, len(newArr), 3):
-				dic[dats[a]] = newArr[i]
-				dic[dats[a+1]] = newArr[i+1]
-				a += 2
-
-			return dic
-		except Exception as e:
-			dic = {}
-			print(e)
-			print("Probably you put an invalid id")
-			return dic'''
-
 	def get_match(self, id_):
 		ext = "ficha.php?id=" + id_
 
@@ -365,32 +324,37 @@ class PromiedosAPI:
 	def today(self, today=1):
 		r = urllib.request.urlopen(self.URL)
 		s = BeautifulSoup(r, 'html.parser')
-		
-		#print(s)
-		
-		#for e in s.find_all(True, {'class':['datoequipo', 'verdegrande']}:
-		#	print(e.get_text())
 
 		tod = []
 		nex = []
 		flag = 0
-
+		ss = ""
 		# here create a list of list so the matches from one league separate from others
 		# ex [[league1, p1, p2], [league2, p1, p2]]
-		for x in s.findAll(True, {'class':['datoequipo', 'falta', 'verdegrande', 'resu', 'tituloin']}):
+		for x in s.findAll(True, {'class':['forma', 'datoequipo', 'jugandose', 'falta', 'finaliza', 'verdegrande', 'resu', 'tituloin']}):
 			if x.get_text() == 'PROXIMOS PARTIDOS':
 				flag = 1
 			
-			if not flag:
-				tod.append(x.get_text())
+			if x.get_text() != '':
+				if not flag:
+					tod.append(x.get_text().strip())
+				else:
+					nex.append(x.get_text().strip())
 			else:
-				nex.append(x.get_text())
-
+				if x.get("class") == ['resu']:
+					if not flag:
+						tod.append(x.get_text())
+					else:
+						nex.append(x.get_text())
+			if x.get("class") == ['forma']:
+				rgx = re.findall(r'id=[a-z]+', str(x.get_text))
+				if rgx != [] and len(rgx[0]) > 6:
+					if not flag:
+						tod.append(rgx[0].replace("id=", ""))
 		if today == 1:
 			return tod[1:]
 		else:
 			return nex
-	
 
 #http://www.promiedos.com.ar/scores.jsonid
 #a
