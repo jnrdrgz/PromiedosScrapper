@@ -19,9 +19,10 @@ class Match:
 			self.away = away
 			
 class LiveTeam:
-	def __init__(self, name="", goals=0, stats="", players="", coach="", changes="", yellow_cards="", red_cards=""):
+	def __init__(self, name="", goals=0, scorers=[], stats="", players="", coach="", changes="", yellow_cards="", red_cards=""):
 		self.name = name
 		self.goals = goals
+		self.scorers = scorers
 		self.stats = stats
 		self.players = players
 		self.coach = coach
@@ -252,54 +253,89 @@ class PromiedosAPI:
 				lmt = s.index(":")+3
 				match.date = st[:lmt]
 				match.referee = match.stadium = st[lmt+1:]
+			else:
+				match.referee = match.stadium = st
 
 		for x in s.findAll(True, {'id':['ficha-tiempo']}):
 			match.time = x.get_text()
 
-		f = 0
-		for x in s.findAll(True, {'class':['nomequipo']}):
-			if x.get("class") == ['nomequipo']:
-				if f == 0:
-					hTeam.name = x.get_text()
-					f = 1
+		f = 0		
+		dathtmp = []
+		datatmp = []
+		for x in s.findAll(True, {'class':['nomequipo', 'incidencias1', 'incidencias2', 'amarillas', 'rojas', 'cambios']}):
+			if f < 2:
+				if x.get("class") == ['nomequipo']:
+					if f == 0:
+						hTeam.name = x.get_text()
+					else:
+						aTeam.name = x.get_text()
+					f += 1
 				else:
+					dathtmp.append(x.get_text())
+				
+			else:
+				if x.get("class") == ['nomequipo']:
 					aTeam.name = x.get_text()
+				else:
+					datatmp.append(x.get_text())
 
-		#todo
-		for x in s.findAll(True, {'class':['incidencias2']}):
-			print("--oneclass--")
-			print(x.get("class"))
-			print(x.get_text())
+		dicH = {}
+		dicA = {}
+		
+		for i in range(0, len(dathtmp), 2):
+			dicH[dathtmp[i].strip()] = dathtmp[i+1]
 
+		for i in range(0, len(datatmp), 2):
+			dicA[datatmp[i].strip()] = datatmp[i+1]
+
+
+		if "GOLES" in dicH.keys():
+			hTeam.scorers = dicH["GOLES"].split(";")[:len(dicH["GOLES"].split(";"))-1]
+			hTeam.goals = len(hTeam.scorers)
+		if "AMARILLAS" in dicH.keys():
+			hTeam.yellow_cards = dicH["AMARILLAS"]
+		if "ROJAS" in dicH.keys():
+			hTeam.red_cards = dicH["ROJAS"]
+		if "CAMBIOS" in dicH.keys():
+			hTeam.changes = dicH["CAMBIOS"]
+
+		if "GOLES" in dicA.keys():
+			aTeam.scorers = dicA["GOLES"].split(";")[:len(dicA["GOLES"].split(";"))-1]
+			aTeam.goals = len(aTeam.scorers)
+		if "AMARILLAS" in dicA.keys():
+			aTeam.yellow_cards = dicA["AMARILLAS"]
+		if "ROJAS" in dicA.keys():
+			aTeam.red_cards = dicA["ROJAS"]
+		if "CAMBIOS" in dicA.keys():
+			aTeam.changes = dicA["CAMBIOS"]
+		
+		stl = []
+		sta = []
+		for x in s.findAll(True, {'id':['porcentaje1']}):
+			stl.append(x.get_text())
+		
+		for x in s.findAll(True, {'id':['porcentaje2']}):
+			sta.append(x.get_text())
+	
+		hStats.possession = stl[0]
+		hStats.shots_ongoal = stl[1]
+		hStats.shots_attempts = stl[2]
+		hStats.fouls = stl[3]
+		hStats.corners = stl[4]
+
+		aStats.possession = sta[0]
+		aStats.shots_ongoal = sta[1]
+		aStats.shots_attempts = sta[2]
+		aStats.fouls = sta[3]
+		aStats.corners = sta[4]
+		
+		hTeam.stats = hStats
+		aTeam.stats = aStats
 
 		match.home = hTeam
 		match.away = aTeam
-		return match
-
-
-		'''for x in s.findAll(True, {'class':['nomequipo', 'incidencias1', 'incidencias2', 'amarillas', 'cambios']}):	
-			if x.get("class") == ['nomequipo']:
-				if flag == 0:
-					flag = 1
-				else:
-					flag = 0
-
-			if flag == 0:
-				statsAT.append(x.get_text())
-			else: 
-				statsHT.append(x.get_text())
-		finl = []
-		finl.append(statsHT)
-		finl.append(statsAT)
-
-		for x in s.findAll(True, {'id':['porcentaje1']}):
-			print(x.get_text())
 		
-		for x in s.findAll(True, {'id':['porcentaje2']}):
-			print(x.get_text())
-
-
-		return finl'''
+		return match
 
 	def _get_secret_id(self, id_):
 		s = self._get_html("ficha.php?id=" + id_, True)
