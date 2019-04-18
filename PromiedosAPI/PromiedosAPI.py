@@ -331,7 +331,7 @@ class PromiedosAPI:
 		ss = ""
 		# here create a list of list so the matches from one league separate from others
 		# ex [[league1, p1, p2], [league2, p1, p2]]
-		for x in s.findAll(True, {'class':['forma', 'datoequipo', 'jugandose', 'falta', 'finaliza', 'verdegrande', 'resu', 'tituloin']}):
+		for x in s.findAll(True, {'class':['forma', 'datoequipo', 'jugandose', 'falta', 'finaliza', 'verdegrande', 'resu', 'tituloin', 'penales', 'penalesprin']}):
 			if x.get_text() == 'PROXIMOS PARTIDOS':
 				flag = 1
 			
