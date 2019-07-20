@@ -125,7 +125,7 @@ class PromiedosAPI:
 		return todo
 		#return equipos + fechas + horarios
 		#return s
-	def get_scores(self, league, lround=0):
+	def get_scores(self, league, lround=0, json=False):
 		#print(league)
 
 		s = self._get_HTML_league(league, lround)
