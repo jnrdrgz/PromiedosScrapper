@@ -4,7 +4,7 @@
 
 ###Get Matches
 
-get_matches(league, round, json(default false))
+get_matches(league, round(default last), json(default false))
 
 return an array(if json = false) with the form ["date", "hour", "team", "team" ...]
 it is not convinient to use this form because you will have to separate the date and hour manually
