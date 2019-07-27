@@ -1,1 +1,1 @@
-python3 -i PromiedosAPI.py
+python3 -i PromiedosScrapper.py

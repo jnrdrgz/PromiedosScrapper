@@ -1,8 +1,8 @@
-#Promiedos Scrapper
+# Promiedos Scrapper
 
-##Methods of the main object:
+## Methods of the main object:
 
-###Get Matches
+### Get Matches
 
 get_matches(league, round(default last), json(default false))
 
@@ -18,7 +18,7 @@ get_matches("espana", 3, json=true):
 
 to do
 
-###Get Scores
+### Get Scores
 
 get_scores(league, round, json(default false))
 
@@ -30,4 +30,12 @@ return an array(if json = false) with the form ["home team", "goals scored by ho
 example:
 to do
 
+### get_standings
 
+get_standings(league, team=False, json=False)
+
+return an array of strings, every string with the form:
+team points matches played w d l goals scored goals conceded goal difference
+
+if json == true it return a json with the form
+'team': {'pos': 0, 'GF': 0, 'GD': 0, 'losses': 0, 'draws': 0, 'wins': 0, 'played': 0, 'points': 0, 'GA': 0}}

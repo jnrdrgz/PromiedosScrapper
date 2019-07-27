@@ -167,7 +167,7 @@ class PromiedosScrapper:
 		if json == True:
 			#{team1: }
 			s = [((x.replace("</td><td>", "---")).replace("<strong>", "")).replace("</strong>", "") for x in s]
-			_json_ = {}
+			_json = {}
 			pos = 1
 			for te in s:
 				t = te.split("---")
