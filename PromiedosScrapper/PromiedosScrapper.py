@@ -40,11 +40,56 @@ class Stat:
 		self.corners = corners
 
 
+
 class PromiedosScrapper:
 	URL = "http://www.promiedos.com.ar/"
 
 	def __init__(self):
 		print("Inited")
+
+	def get_leagues():
+		return [{
+			"league_id": "10",
+			"league_name": "la liga",
+			"country": "espana"
+		},
+		{
+			"league_id": "11",
+			"league_name": "serie a",
+			"country": "italia"
+		},
+		{
+			"league_id": "12",
+			"league_name": "premier league",
+			"country": "inglaterra"
+		},
+		{
+			"league_id": "25",
+			"league_name": "bundesliga",
+			"country": "alemania"
+		},
+		{
+			"league_id": "26",
+			"league_name": "brasileirao",
+			"country": "brasil"
+		},
+		{
+			"league_id": "27",
+			"league_name": "ligue 1",
+			"country": "francia"
+		},
+		{
+			"league_id": "87",
+			"league_name": "liga mexico",
+			"country": "mexico"
+		},
+		{
+			"league_id": "88",
+			"league_name": "mls",
+			"country": "estados unidos"
+		}
+
+		]
 
 	def _get_HTML_league(self, league, lround=0):
 		extLeagues = {"espana": 10, 
